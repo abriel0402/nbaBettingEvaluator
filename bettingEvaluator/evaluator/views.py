@@ -41,12 +41,11 @@ for i in range(len(playerTags)):
             
             
 
-    leg = Leg(playerTags[i].text, "pts", fixedLineTags[i].text, playerID)
-    LEGS.append(leg)
+    legToAdd = Leg(playerTags[i].text, "pts", fixedLineTags[i].text, playerID)
+    LEGS.append(legToAdd)
 
-x = playergamelog.PlayerGameLog("2544", season=SeasonAll.all).get_data_frames()[0].head(5)
-last5 = x["PTS"].tolist()
-print(last5)
+
+
 
 
 
@@ -60,7 +59,11 @@ def index(request):
 
 def player(request, playerID):
     
+    for leg in LEGS:
+        if str(leg.playerID) == str(playerID):
+            leg = leg
+            break
 
     return render(request, "evaluator/player.html", {
-        
+        "leg": leg,
     })
