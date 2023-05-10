@@ -8,6 +8,14 @@
 </head>
 <body>
     <h1>{{ leg.player }}</h1>
-    <h3>{{ leg.line }}</h3>
+    <h2>Line: {{ leg.line }} pts</h2>
+    <h3>Last 5 Hit Rate: {{ hitRate5 }}</h3>
+    <h3>Last 10 Hit Rate: {{ hitRate10 }}</h3>
+    <h3>Last 20 Hit Rate: {{ hitRate20 }}</h3>
+    <h3>Season Hit Rate: {{ hitRateSzn }}</h3>
+    {% for pts in leg.last10 %}
+    <p>{{ pts }}</p>
+    {% endfor %}
+    
 </body>
 </html>
