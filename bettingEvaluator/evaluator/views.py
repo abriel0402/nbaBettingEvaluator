@@ -47,9 +47,21 @@ for i in range(len(playerTags)):
     LEGS.append(legToAdd)
 
 
-
-
-
+def getHitRates(leg, n):
+    x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
+    lastN = x["PTS"].tolist()
+    hitCount = 0
+    missingGames = n-len(lastN)
+    if missingGames != 0:
+        x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
+        missingGamesList = x["PTS"].tolist()
+        lastN = lastN + missingGamesList
+    for pts in lastN:
+        if float(pts) > float(leg.line):
+            hitCount = hitCount + 1
+    
+    hitRateN = str(int((hitCount/n)*100))+"%"
+    return [hitRateN, lastN]
 
 
 # Create your views here.
@@ -65,38 +77,22 @@ def player(request, playerID):
             leg = leg
             break
     
-    #Get Last 5 and 10 Hit Rates (PLAYOFFS)
-    x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(5)
-    leg.last5 = x["PTS"].tolist()
-    x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(10)
-    leg.last10 = x["PTS"].tolist()
     
+
+    hitRates = getHitRates(leg, 20)
+    leg.last20 = hitRates[1]
+    hitRate20 = hitRates[0]
+
+    hitRates = getHitRates(leg, 10)
+    leg.last10 = hitRates[1]
+    hitRate10 = hitRates[0]
+
+    hitRates = getHitRates(leg, 5)
+    leg.last5 = hitRates[1]
+    hitRate5 = hitRates[0]
+
+
     hitCount = 0
-    for pts in leg.last5:
-        if float(pts) > float(leg.line):
-            hitCount = hitCount + 1
-    hitRate5 = str(int((hitCount/5)*100))+"%"
-    for pts in leg.last10:
-        if float(pts) > float(leg.line):
-            hitCount = hitCount + 1
-    hitRate10 = str(int((hitCount/10)*100))+"%"
-
-    #Get Last 20 Hit Rate (PLAYOFFS)
-    x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(20)
-    leg.last20 = x["PTS"].tolist()
-    for pts in leg.last20:
-        if float(pts) > float(leg.line):
-            hitCount = hitCount + 1
-    #missingGames = 20-len(leg.last20)
-    #if missingGames != 0:
-        #x = playergamelog.PlayerGameLog(leg.playerID, season="2022").get_data_frames()[0].head(missingGames)
-        #leg.last20 = x["PTS"].tolist()
-
-
-    hitRate20 = str(int((hitCount/20)*100))+"%"
-
-
-
     #Get Season Hit Rate
     x = playergamelog.PlayerGameLog(leg.playerID, season="2022").get_data_frames()[0]
     leg.season = x["PTS"].tolist()
