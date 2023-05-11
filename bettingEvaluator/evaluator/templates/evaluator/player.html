@@ -32,26 +32,27 @@
     <h1 class="p-2 pt-3">{{ leg.player }}</h1>
     <h2 class="p-2">Line: {{ leg.line }} {{ stat }}</h2>
     
-    <h4 class="pt-2">Last 5 Hit Rate: {{ hitRate5 }}
-        
-    </h4>
-    <h4 class="p-1">Last 10 Hit Rate: {{ hitRate10 }}</h4>
-    <h4 class="p-1">Last 20 Hit Rate: {{ hitRate20 }}</h4>
-    <h4 class="p-1">Season Hit Rate: {{ hitRateSzn }}</h4>
+<div class="text-center p-1">
+    <h3>Projection</h3>
+    <button class="{{color}}">{{decision}}</button>
+    </div>
+    
+    <h4 class="pt-2">Last 5 Hit Rate: {{ hitRate5 }} ({{ average5 }} {{statPerGame}})</h4>
+    <h4 class="p-1">Last 10 Hit Rate: {{ hitRate10 }} ({{ average10 }} {{statPerGame}})</h4>
+    <h4 class="p-1">Last 20 Hit Rate: {{ hitRate20 }} ({{ average20 }} {{statPerGame}})</h4>
+    <h4 class="p-1">Season Hit Rate: {{ hitRateSzn }} ({{ averageSeason }} {{statPerGame}})</h4>
 
         
 </div>
 <div class="text-center p-3">
     <h4>Last 5 Games</h4>
     <h5>
-    {% for pts in leg.last5 %}
+    {% for stat in leg.last5 %}
     
-    {{ pts }} &nbsp;&nbsp;&nbsp;
+    {{ stat }} &nbsp;&nbsp;&nbsp;
 
     {% endfor %}
     </h5>
-
-    
 </div>
     
 </body>
