@@ -12,7 +12,7 @@
     <div>
         <nav class="navbar navbar-expand-lg navbar-light bg-white row">
         <a href="{% url 'points' %}"class="navbar-brand text-black col-sm text-center">Points</a>    
-        <a href="{% url 'assists' %}"class="navbar-brand text-black col-sm text-center">Assists</a>  
+        <a href="{% url 'assists'%}"class="navbar-brand text-black col-sm text-center">Assists</a>  
         <a href="{% url 'rebounds' %}"class="navbar-brand text-black col-sm text-center">Rebounds</a>  
         <a class="navbar-brand text-black col-sm text-center">Points+Assists</a>  
         <a class="navbar-brand text-black col-sm text-center">Points+Rebounds</a>  
@@ -25,6 +25,13 @@
         
     </nav>
 </div>
-    <h1 class="text-center p-1">Select a Stat</h1>
+    <h1 class="text-center p-1">Assists</h1>
+    <ul class="list-group text-center">
+        {% for leg in legs %}
+            <li class="list-group-item">
+                <a href="{% url "player-asts" playerID=leg.playerID stat=leg.stat %}">{{ leg.player }} ---> {{ leg.line }} asts </a>
+            </li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

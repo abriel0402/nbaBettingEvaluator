@@ -25,6 +25,13 @@
         
     </nav>
 </div>
-    <h1 class="text-center p-1">Select a Stat</h1>
+    <h1 class="text-center p-1">Points</h1>
+    <ul class="list-group text-center">
+        {% for leg in legs %}
+            <li class="list-group-item">
+                <a href="{% url "player-pts" playerID=leg.playerID stat=leg.stat %}">{{ leg.player }} ---> {{ leg.line }} pts </a>
+            </li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

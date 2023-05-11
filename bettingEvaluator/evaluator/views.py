@@ -6,25 +6,44 @@ from nba_api.stats.static import players
 from nba_api.stats.endpoints import playergamelog
 
 
-ptsLinesSite = requests.get("https://sportsbook.draftkings.com/nba-playoffs?category=player-points").text
-ptsLinesSoup = BeautifulSoup(ptsLinesSite, "lxml")
-
-playerTags = ptsLinesSoup.find_all("span", class_="sportsbook-row-name")
-lineTags = ptsLinesSoup.find_all("span", class_="sportsbook-outcome-cell__line")
-
-fixedLineTags = []
-
 PLAYERS = players.get_players()
 
-addCurrent = True
-for tag in lineTags:
-    if addCurrent:
-        fixedLineTags.append(tag)
-        addCurrent = False
-    elif not addCurrent:
-        addCurrent = True
+ptsLinesSite = requests.get("https://sportsbook.draftkings.com/nba-playoffs?category=player-points").text
+astsLinesSite = requests.get("https://sportsbook.draftkings.com/nba-playoffs?category=player-assists").text
+rebsLinesSite = requests.get("https://sportsbook.draftkings.com/nba-playoffs?category=player-rebounds").text
 
-LEGS = []
+ptsLinesSoup = BeautifulSoup(ptsLinesSite, "lxml")
+astsLinesSoup = BeautifulSoup(astsLinesSite, "lxml")
+rebsLinesSoup = BeautifulSoup(rebsLinesSite, "lxml")
+
+playerTagsPoints = ptsLinesSoup.find_all("span", class_="sportsbook-row-name")
+playerTagsAssists = astsLinesSoup.find_all("span", class_="sportsbook-row-name")
+playerTagsRebounds = rebsLinesSoup.find_all("span", class_="sportsbook-row-name")
+
+lineTagsPoints = ptsLinesSoup.find_all("span", class_="sportsbook-outcome-cell__line")
+lineTagsAssists = astsLinesSoup.find_all("span", class_="sportsbook-outcome-cell__line")
+lineTagsRebounds = rebsLinesSoup.find_all("span", class_="sportsbook-outcome-cell__line")
+
+
+
+
+
+
+def filterTags(lineTags):
+    filtered = []
+    addCurrent = True
+    for tag in lineTags:
+        if addCurrent:
+            filtered.append(tag)
+            addCurrent = False
+        elif not addCurrent:
+            addCurrent = True
+    return filtered
+
+filteredLineTagsPoints = filterTags(lineTagsPoints)
+filteredLineTagsAssists = filterTags(lineTagsAssists)
+filteredLineTagsRebounds = filterTags(lineTagsRebounds)
+
 
 class Leg:
     def __init__(self, player, stat, line, playerID, last5=[], last10=[], last20=[], season=[], vsOpp=[]):
@@ -33,28 +52,35 @@ class Leg:
         self.line = line
         self.playerID = playerID
 
-for i in range(len(playerTags)):
-    for player in PLAYERS:
-        if player["full_name"] == playerTags[i].text:
-            playerID = player["id"]
+#get legs
+def createLegs(playerTags, filteredLineTags, stat):
+    LEGS = []
+    for i in range(len(playerTags)):
+        for player in PLAYERS:
+            if player["full_name"] == playerTags[i].text:
+                playerID = player["id"]
             
-            
+        legToAdd = Leg(playerTags[i].text, stat, filteredLineTags[i].text, playerID)
+        LEGS.append(legToAdd)
+    return LEGS
 
-    legToAdd = Leg(playerTags[i].text, "PTS", fixedLineTags[i].text, playerID)
-    LEGS.append(legToAdd)
 
+POINTS_LEGS = createLegs(playerTagsPoints, filteredLineTagsPoints, "PTS")
+ASSISTS_LEGS = createLegs(playerTagsAssists, filteredLineTagsAssists, "AST")
+REBOUNDS_LEGS = createLegs(playerTagsRebounds, filteredLineTagsRebounds, "REB")
 
+#get hit rates
 def getHitRates(leg, n):
     x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
-    lastN = x["PTS"].tolist()
+    lastN = x[leg.stat].tolist()
     hitCount = 0
     missingGames = n-len(lastN)
     if missingGames != 0:
         x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
-        missingGamesList = x["PTS"].tolist()
+        missingGamesList = x[leg.stat].tolist()
         lastN = lastN + missingGamesList
-    for pts in lastN:
-        if float(pts) > float(leg.line):
+    for stat in lastN:
+        if float(stat) > float(leg.line):
             hitCount = hitCount + 1
     
     hitRateN = str(int((hitCount/n)*100))+"%"
@@ -64,18 +90,42 @@ def getHitRates(leg, n):
 # Create your views here.
 def index(request):
     return render(request, "evaluator/index.html", {
-        "legs": LEGS,
     })
 
+def points(request):
+    return render(request, "evaluator/points.html", {
+        "legs": POINTS_LEGS,
+    })
 
+def assists(request):
+    return render(request, "evaluator/assists.html", {
+        "legs": ASSISTS_LEGS,
+    })
 
-def player(request, playerID):
-    
-    for leg in LEGS:
-        if str(leg.playerID) == str(playerID):
-            leg = leg
-            break
-    
+def rebounds(request):
+    return render(request, "evaluator/rebounds.html", {
+        "legs": REBOUNDS_LEGS,
+    })
+
+def player(request, playerID, stat):
+    if stat == "PTS":
+        for leg in POINTS_LEGS:
+            if str(leg.playerID) == str(playerID):
+                leg = leg
+                statTxt = "pts"
+                break
+    if stat == "AST":
+        for leg in ASSISTS_LEGS:
+            if str(leg.playerID) == str(playerID):
+                leg = leg
+                statTxt = "asts"
+                break
+    if stat == "REB":
+        for leg in REBOUNDS_LEGS:
+            if str(leg.playerID) == str(playerID):
+                leg = leg
+                statTxt = "rebs"
+                break
     
 
     hitRates = getHitRates(leg, 20)
@@ -90,13 +140,12 @@ def player(request, playerID):
     leg.last5 = hitRates[1]
     hitRate5 = hitRates[0]
 
-
-    hitCount = 0
     #Get Season Hit Rate
+    hitCount = 0
     x = playergamelog.PlayerGameLog(leg.playerID, season="2022").get_data_frames()[0]
-    leg.season = x["PTS"].tolist()
-    for pts in leg.season:
-        if float(pts) > float(leg.line):
+    leg.season = x[leg.stat].tolist()
+    for stat in leg.season:
+        if float(stat) > float(leg.line):
             hitCount = hitCount + 1
     hitRateSzn = str(int((hitCount/len(leg.season))*100))+"%"
         
@@ -107,4 +156,5 @@ def player(request, playerID):
         "hitRate10": hitRate10,
         "hitRate20": hitRate20,
         "hitRateSzn": hitRateSzn,
+        "stat": statTxt,
     })
