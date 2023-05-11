@@ -4,9 +4,6 @@ from bs4 import BeautifulSoup
 import requests
 from nba_api.stats.static import players
 from nba_api.stats.endpoints import playergamelog
-from nba_api.stats.library.parameters import SeasonAll
-import json.decoder
-import time
 
 
 ptsLinesSite = requests.get("https://sportsbook.draftkings.com/nba-playoffs?category=player-points").text
@@ -43,7 +40,7 @@ for i in range(len(playerTags)):
             
             
 
-    legToAdd = Leg(playerTags[i].text, "pts", fixedLineTags[i].text, playerID)
+    legToAdd = Leg(playerTags[i].text, "PTS", fixedLineTags[i].text, playerID)
     LEGS.append(legToAdd)
 
 
@@ -69,6 +66,8 @@ def index(request):
     return render(request, "evaluator/index.html", {
         "legs": LEGS,
     })
+
+
 
 def player(request, playerID):
     

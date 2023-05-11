@@ -4,12 +4,31 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
     <title>Document</title>
 </head>
 <body>
-    <ul>
+
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white row">
+        <a class="navbar-brand text-black col-sm text-center">Points</a>    
+        <a class="navbar-brand text-black col-sm text-center">Assists</a>  
+        <a class="navbar-brand text-black col-sm text-center">Rebounds</a>  
+        <a class="navbar-brand text-black col-sm text-center">Points+Assists</a>  
+        <a class="navbar-brand text-black col-sm text-center">Points+Rebounds</a>  
+        <a class="navbar-brand text-black col-sm text-center">Rebounds+Assists</a>  
+        <a class="navbar-brand text-black col-sm text-center">Points+Rebounds+Assists</a>  
+        <a class="navbar-brand text-black col-sm text-center">Steals</a>  
+        <a class="navbar-brand text-black col-sm text-center">Blocks</a>  
+        <a class="navbar-brand text-black col-sm text-center">Steals+Blocks</a>  
+        <a class="navbar-brand text-black col-sm text-center">Turnovers</a>
+        
+    </nav>
+</div>
+    <h1 class="text-center p-1">Select a Stat</h1>
+    <ul class="list-group text-center">
         {% for leg in legs %}
-            <li>
+            <li class="list-group-item">
                 <a href="{% url "player" leg.playerID %}">{{ leg.player }} ---> {{ leg.line }} pts </a>
             </li>
         {% endfor %}
