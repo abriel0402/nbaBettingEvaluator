@@ -9,6 +9,8 @@ urlpatterns = [
     path("assists/", views.assists, name="assists"),
     path("<str:stat>/<int:playerID>/", views.player, name="player-rebs"),
     path("rebounds/", views.rebounds, name="rebounds"),
+    path("<str:stat>/<int:playerID>/", views.player, name="player-pa"),
+    path("points+assists/", views.pa, name="pa"),
 
 
 ]

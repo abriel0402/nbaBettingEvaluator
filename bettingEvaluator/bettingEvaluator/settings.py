@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-kx%xyea)2$rvk(9g2wttv^8x-t))%nbaw30yvoz)eu^fbd0pwc
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+CACHE_TTL = 60*10
 
 # Application definition
 
