@@ -15,9 +15,9 @@
         <a href="{% url 'assists'%}"class="navbar-brand text-black col-sm text-center">Assists</a>  
         <a href="{% url 'rebounds' %}"class="navbar-brand text-black col-sm text-center">Rebounds</a>  
         <a href="{% url 'pa' %}"class="navbar-brand text-black col-sm text-center">Points+Assists</a>  
-        <a class="navbar-brand text-black col-sm text-center">Points+Rebounds</a>  
-        <a class="navbar-brand text-black col-sm text-center">Rebounds+Assists</a>  
-        <a class="navbar-brand text-black col-sm text-center">Points+Rebounds+Assists</a>  
+        <a href="{% url 'pr' %}"class="navbar-brand text-black col-sm text-center">Points+Rebounds</a>  
+        <a href="{% url 'ra' %}"class="navbar-brand text-black col-sm text-center">Rebounds+Assists</a>  
+        <a href="{% url 'pra' %}" class="navbar-brand text-black col-sm text-center">Points+Rebounds+Assists</a>  
         <a class="navbar-brand text-black col-sm text-center">Steals</a>  
         <a class="navbar-brand text-black col-sm text-center">Blocks</a>  
         <a class="navbar-brand text-black col-sm text-center">Steals+Blocks</a>  
@@ -53,6 +53,97 @@
 
     {% endfor %}
     </h5>
+
+    
+      
+    <div style="width: 600px; height: 400px;" class="mx-auto">
+        <div class="btn-group mb-3" role="group" aria-label="Game chart period">
+            <button type="button" class="btn btn-primary" onclick="updateChart(5)" id="defaultOpen">Last 5</button>
+            <button type="button" class="btn btn-primary" onclick="updateChart(10)">Last 10</button>
+            <button type="button" class="btn btn-primary" onclick="updateChart(20)">Last 20</button>
+          </div>
+        <canvas id="myChart"></canvas>
+      </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
+
+    <script>
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5'],
+                datasets: [{
+                    label: 'Bar',
+                    data: {{leg.last5}},
+                    backgroundColor: function(context) {
+                      var value = context.dataset.data[context.dataIndex];
+                      var color = value >= {{leg.line}} ? '#006847' : '#CE1126';
+                      return color;
+                    },
+                    borderColor: 'rgba(0, 0, 0, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    xAxes: [{
+                        display: false,
+                        ticks: {
+                            beginAtZero: true
+                        },
+                        gridLines: {
+                            display: false,
+                        }
+                    }],
+                    yAxes: [{
+                        display: false,
+                        ticks: {
+                            beginAtZero: true
+                        },
+                        gridLines: {
+                            display: false,
+                        }
+                    }]
+                },
+                legend: {
+                    display: false
+                }
+            }
+        });
+        
+        // Set the "Last 5" button to active by default
+        document.getElementById("defaultOpen").classList.add("active");
+
+        function updateChart(period) {
+            if (period === 5) {
+                myChart.data.datasets[0].data = {{leg.last5}};
+                myChart.data.labels = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5'];
+            } else if (period === 10) {
+                myChart.data.datasets[0].data = {{leg.last10}};
+                myChart.data.labels = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5', 'Game 6', 'Game 7', 'Game 8', 'Game 9', 'Game 10'];
+            } else if (period === 20) {
+                myChart.data.datasets[0].data = {{leg.last20}};
+                myChart.data.labels = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5', 'Game 6', 'Game 7', 'Game 8', 'Game 9', 'Game 10', 'Game 11', 'Game 12', 'Game 13', 'Game 14', 'Game 15', 'Game 16', 'Game 17', 'Game 18', 'Game 19', 'Game 20'];
+            }
+            
+            // Update the button styles to show the active period
+            var buttons = document.getElementsByClassName("btn");
+            for (var i = 0; i < buttons.length; i++) {
+                if (buttons[i].id == "defaultOpen") {
+                    buttons[i].classList.add("active");
+                } else {
+                    buttons[i].classList.remove("active");
+                }
+            }
+            
+            myChart.update();
+        }
+    </script>
+
+    
+      
 </div>
     
 </body>

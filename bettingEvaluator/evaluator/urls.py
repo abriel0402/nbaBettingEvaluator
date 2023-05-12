@@ -11,6 +11,12 @@ urlpatterns = [
     path("rebounds/", views.rebounds, name="rebounds"),
     path("<str:stat>/<int:playerID>/", views.player, name="player-pa"),
     path("points+assists/", views.pa, name="pa"),
+    path("<str:stat>/<int:playerID>/", views.player, name="player-pr"),
+    path("points+rebounds/", views.pr, name="pr"),
+    path("<str:stat>/<int:playerID>/", views.player, name="player-ra"),
+    path("rebounds+assists/", views.ra, name="ra"),
+    path("<str:stat>/<int:playerID>/", views.player, name="player-pra"),
+    path("points+rebounds+assists/", views.pra, name="pra"),
 
 
 ]

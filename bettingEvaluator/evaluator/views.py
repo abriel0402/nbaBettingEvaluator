@@ -26,7 +26,7 @@ if ptsLinesSite is None:
     ptsLinesSoup = BeautifulSoup(ptsLinesSite, "lxml")  
     playerTagsPoints = ptsLinesSoup.find_all("span", class_="sportsbook-row-name") 
     lineTagsPoints = ptsLinesSoup.find_all("span", class_="sportsbook-outcome-cell__line")
-    cache.set('ptsLinesSite', ptsLinesSite, timeout=300)
+    cache.set('ptsLinesSite', ptsLinesSite, timeout=120)
 
 astLinesSite = cache.get('astLinesSite')
 if astLinesSite is None:
@@ -34,7 +34,7 @@ if astLinesSite is None:
     astsLinesSoup = BeautifulSoup(astsLinesSite, "lxml")
     playerTagsAssists = astsLinesSoup.find_all("span", class_="sportsbook-row-name")
     lineTagsAssists = astsLinesSoup.find_all("span", class_="sportsbook-outcome-cell__line")
-    cache.set('astLinesSite', astLinesSite, timeout=300)
+    cache.set('astLinesSite', astLinesSite, timeout=120)
 
 rebsLinesSite = cache.get('rebsLinesSite')
 if rebsLinesSite is None:
@@ -42,7 +42,7 @@ if rebsLinesSite is None:
     rebsLinesSoup = BeautifulSoup(rebsLinesSite, "lxml")
     playerTagsRebounds = rebsLinesSoup.find_all("span", class_="sportsbook-row-name")
     lineTagsRebounds = rebsLinesSoup.find_all("span", class_="sportsbook-outcome-cell__line")
-    cache.set('rebsLineSite', rebsLinesSite, timeout=300)
+    cache.set('rebsLineSite', rebsLinesSite, timeout=120)
 
 
 
@@ -89,16 +89,16 @@ def createLegs(playerTags, filteredLineTags, stat):
 POINTS_LEGS = cache.get("POINTS_LEGS")
 if POINTS_LEGS is None:
     POINTS_LEGS = createLegs(playerTagsPoints, filteredLineTagsPoints, "PTS")
-    cache.set("POINTS_LEGS", POINTS_LEGS, timeout=300)
+    cache.set("POINTS_LEGS", POINTS_LEGS, timeout=120)
 ASSISTS_LEGS = cache.get("ASSISTS_LEGS")
 if ASSISTS_LEGS is None:
     ASSISTS_LEGS = createLegs(playerTagsAssists, filteredLineTagsAssists, "AST")
-    cache.set("ASSISTS_LEGS", ASSISTS_LEGS, timeout=300)
+    cache.set("ASSISTS_LEGS", ASSISTS_LEGS, timeout=120)
     
 REBOUNDS_LEGS = cache.get("REBOUNDS_LEGS")
 if REBOUNDS_LEGS is None:
     REBOUNDS_LEGS = createLegs(playerTagsRebounds, filteredLineTagsRebounds, "REB")
-    cache.set("REBOUNDS_LEGS", REBOUNDS_LEGS, timeout=300)
+    cache.set("REBOUNDS_LEGS", REBOUNDS_LEGS, timeout=120)
 
 
 #stat should be formatted as: PR, PA, RA, SB
@@ -113,19 +113,51 @@ def create2ComboLegs(LEGS1, LEGS2, stat):
                 NEW_LEGS.append(legToAdd)
     return NEW_LEGS
 
+
 PA_LEGS = cache.get("PA_LEGS")
 if PA_LEGS is None:
     PA_LEGS = create2ComboLegs(POINTS_LEGS, ASSISTS_LEGS, "PA")
-    cache.set("PA_LEGS", PA_LEGS, timeout=300)
+    cache.set("PA_LEGS", PA_LEGS, timeout=120)
+
+PR_LEGS = cache.get("PR_LEGS")
+if PR_LEGS is None:
+    PR_LEGS = create2ComboLegs(POINTS_LEGS, REBOUNDS_LEGS, "PR")
+    cache.set("PR_LEGS", PR_LEGS, timeout=120)
+
+RA_LEGS = cache.get("RA_LEGS")
+if RA_LEGS is None:
+    RA_LEGS = create2ComboLegs(REBOUNDS_LEGS, ASSISTS_LEGS, "RA")
+    cache.set("RA_LEGS", RA_LEGS, timeout=120)
+
+#stat should be formatted as: PRA
+def create3ComboLegs(LEGS1, LEGS2, LEGS3, stat):
+    NEW_LEGS = []
+    for leg1 in LEGS1:
+        for leg2 in LEGS2:
+            for leg3 in LEGS3:
+                if leg3.player == leg2.player and leg3.player == leg1.player:
+                    line = float(leg1.line)+float(leg2.line)+float(leg3.line)
+                    legToAdd = Leg(leg1.player, stat, line, leg1.playerID)
+                    
+                    NEW_LEGS.append(legToAdd)
+    return NEW_LEGS
+
+PRA_LEGS = cache.get("PRA_LEGS")
+if PRA_LEGS is None:
+    PRA_LEGS = create3ComboLegs(POINTS_LEGS, REBOUNDS_LEGS, ASSISTS_LEGS, "PRA")
+    cache.set("PRA_LEGS", PRA_LEGS, timeout=120)
+
 #get hit rates
-def getHitRates(leg, n, stat1="N/A", stat2="N/A"):
+def getHitRates(leg, n, stat1="N/A", stat2="N/A", stat3="N/A"):
     lastN = []
     if leg.stat in ["PTS", "AST", "REB"]:
         x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
+        print("api being called")
         lastN = x[leg.stat].tolist()
         hitCount = 0
         missingGames = n-len(lastN)
         if missingGames != 0:
+            print("api being called")
             x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
             missingGamesList = x[leg.stat].tolist()
             lastN = lastN + missingGamesList
@@ -135,17 +167,17 @@ def getHitRates(leg, n, stat1="N/A", stat2="N/A"):
     
         hitRateN = str(int((hitCount/n)*100))+"%"
         return [hitRateN, lastN]
-    else:
+    elif leg.stat in ["PA", "PR", "RA"]:
+        print("api being called")
         x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
         lastN1 = x[stat1].tolist()
-        x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
         lastN2 = x[stat2].tolist()
         hitCount = 0
         missingGames = n-len(lastN1)
         if missingGames != 0:
+            print("api being called")
             x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
             missingGamesList1 = x[stat1].tolist()
-            x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
             missingGamesList2 = x[stat2].tolist()
             lastN1 = lastN1 + missingGamesList1
             lastN2 = lastN2 + missingGamesList2
@@ -156,7 +188,29 @@ def getHitRates(leg, n, stat1="N/A", stat2="N/A"):
                 hitCount = hitCount + 1
         hitRateN = str(int((hitCount/n)*100))+"%"
         return [hitRateN, lastN]
-
+    else:
+        print("api call")
+        x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
+        lastN1 = x[stat1].tolist()
+        lastN2 = x[stat2].tolist()
+        lastN3 = x[stat3].tolist()
+        hitCount = 0
+        missingGames = n-len(lastN1)
+        if missingGames != 0:
+            print("api being called")
+            x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
+            missingGamesList1 = x[stat1].tolist()
+            missingGamesList2 = x[stat2].tolist()
+            missingGamesList3 = x[stat3].tolist()
+            lastN1 = lastN1 + missingGamesList1
+            lastN2 = lastN2 + missingGamesList2
+            lastN3 = lastN3 + missingGamesList3
+        for i in range(len(lastN1)):
+            lastN.append(lastN1[i]+lastN2[i]+lastN3[i])
+            if (float(lastN1[i])+float(lastN2[i])+float(lastN3[i]) > float(leg.line)):
+                hitCount += 1
+        hitRateN = str(int((hitCount/n)*100))+"%"
+        return [hitRateN, lastN]
 
 
 
@@ -177,6 +231,7 @@ def getDecision(last5, last10, last20):
         decision = "PASS"
         color = "btn btn-dark"
     return [decision, color]
+
 
 
 
@@ -206,13 +261,26 @@ def pa(request):
         "legs": PA_LEGS,
     })
 
+def pr(request):
+    return render(request, "evaluator/pr.html", {
+        "legs": PR_LEGS,
+    })
+
+def ra(request):
+    return render(request, "evaluator/ra.html", {
+        "legs": RA_LEGS,
+    })
+
+def pra(request):
+    for leg in PRA_LEGS:
+        print(leg)
+    return render(request, "evaluator/pra.html", {
+        "legs": PRA_LEGS,
+    })
 
 def player(request, playerID, stat):
-
-    CACHE_KEY = str(playerID) + ":" + stat
-    CACHED_DATA = cache.get(CACHE_KEY)
-    if CACHED_DATA:
-        return CACHED_DATA
+    
+    
     
     if stat == "PTS":
         CURR_LEGS = POINTS_LEGS
@@ -230,6 +298,27 @@ def player(request, playerID, stat):
         CURR_LEGS = PA_LEGS
         statTxt = "pa"
         statPerGame = "papg"
+        stat1 = "PTS"
+        stat2 = "AST"
+    elif stat == "PR":
+        CURR_LEGS = PR_LEGS
+        statTxt = "pr"
+        statPerGame = "prpg"
+        stat1 = "PTS"
+        stat2 = "REB"
+    elif stat == "RA":
+        CURR_LEGS = RA_LEGS
+        statTxt = "ra"
+        statPerGame = "rapg"
+        stat1 = "REB"
+        stat2 = "AST"
+    elif stat == "PRA":
+        CURR_LEGS = PRA_LEGS
+        statTxt = "pra"
+        statPerGame = "prapg"
+        stat1 = "PTS"
+        stat2 = "REB"
+        stat3 = "AST"
 
     for leg in CURR_LEGS:
         if str(leg.playerID) == str(playerID):
@@ -238,31 +327,31 @@ def player(request, playerID, stat):
     
     
     #  Hit Rates
-    if leg.stat == "PA":
-        hitRates = getHitRates(leg, 20, "PTS", "AST")
+    if leg.stat in ["PA", "PR", "RA"]:
+        hitRates = getHitRates(leg, 20, stat1, stat2)
         leg.last20 = hitRates[1]
         hitRate20 = hitRates[0]
     
 
-        hitRates = getHitRates(leg, 10, "PTS", "AST")
+        hitRates = getHitRates(leg, 10, stat1, stat2)
         leg.last10 = hitRates[1]
         hitRate10 = hitRates[0]
 
-        hitRates = getHitRates(leg, 5, "PTS", "AST")
+        hitRates = getHitRates(leg, 5, stat1, stat2)
         leg.last5 = hitRates[1]
         hitRate5 = hitRates[0]
 
         #Get Season Hit Rate
         hitCount = 0
+        print("api being called")
         x = playergamelog.PlayerGameLog(leg.playerID, season="2022").get_data_frames()[0]
-        list1 = x["PTS"].tolist()
-        x = playergamelog.PlayerGameLog(leg.playerID, season="2022").get_data_frames()[0]
-        list2 = x["AST"].tolist()
+        list1 = x[stat1].tolist()
+        list2 = x[stat2].tolist()
         for i in range(len(list1)):
             if float(list1[i]+list2[i]) > float(leg.line):
                 hitCount = hitCount + 1
         hitRateSzn = str(int((hitCount/len(list1))*100))+"%"
-    else: 
+    elif leg.stat in ["PTS", "REB", "AST"]: 
         hitRates = getHitRates(leg, 20)
         leg.last20 = hitRates[1]
         hitRate20 = hitRates[0]
@@ -277,6 +366,7 @@ def player(request, playerID, stat):
         hitRate5 = hitRates[0]
 
         #Get Season Hit Rate
+        print("api being called")
         hitCount = 0
         x = playergamelog.PlayerGameLog(leg.playerID, season="2022").get_data_frames()[0]
         leg.season = x[leg.stat].tolist()
@@ -284,7 +374,31 @@ def player(request, playerID, stat):
             if float(stat) > float(leg.line):
                hitCount = hitCount + 1
         hitRateSzn = str(int((hitCount/len(leg.season))*100))+"%"
+    else:
+        hitRates = getHitRates(leg, 20, stat1, stat2, stat3)
+        leg.last20 = hitRates[1]
+        hitRate20 = hitRates[0]
+    
 
+        hitRates = getHitRates(leg, 10, stat1, stat2, stat3)
+        leg.last10 = hitRates[1]
+        hitRate10 = hitRates[0]
+
+        hitRates = getHitRates(leg, 5, stat1, stat2, stat3)
+        leg.last5 = hitRates[1]
+        hitRate5 = hitRates[0]
+
+        #Get Season Hit Rate
+        hitCount = 0
+        print("api being called")
+        x = playergamelog.PlayerGameLog(leg.playerID, season="2022").get_data_frames()[0]
+        list1 = x[stat1].tolist()
+        list2 = x[stat2].tolist()
+        list3 = x[stat3].tolist()
+        for i in range(len(list1)):
+            if float(list1[i]+list2[i]+list3[i]) > float(leg.line):
+                hitCount = hitCount + 1
+        hitRateSzn = str(int((hitCount/len(list1))*100))+"%"
     
 
     
@@ -307,21 +421,29 @@ def player(request, playerID, stat):
         for stat in leg.season:
             total = total + stat
         averageSeason = round((total/len(leg.season)), 1)
-    elif leg.stat == "PA":
+    elif leg.stat in ["PR", "PA", "RA"]:
         for i in range(len(list1)):
             total += list1[i] + list2[i]
+        averageSeason = round((total/len(list1)), 1)
+    else:
+        for i in range(len(list1)):
+            total += list1[i] + list2[i] + list3[i]
         averageSeason = round((total/len(list1)), 1)
 
     if leg.stat in ["PTS", "AST", "REB"]:
         hitRates = [getHitRates(leg, n) for n in [5, 10, 20]]
-    elif leg.stat == "PA":
-        hitRates = [getHitRates(leg, n, "PTS", "AST") for n in [5, 10, 20]]
+    elif leg.stat in ["PR", "PA", "RA"]:
+        hitRates = [getHitRates(leg, n, stat1, stat2) for n in [5, 10, 20]]
+    else:
+        hitRates = [getHitRates(leg, n, stat1, stat2, stat3) for n in [5, 10, 20]]
     decisionList = getDecision(*hitRates)
     decision = decisionList[0]
     color = decisionList[1]
     
 
-    response = render(request, "evaluator/player.html", {
+    
+
+    return render(request, "evaluator/player.html", {
         "leg": leg,
         "hitRate5": hitRate5,
         "hitRate10": hitRate10,
@@ -337,5 +459,5 @@ def player(request, playerID, stat):
         "color": color,
 
     })
-    cache.set(CACHE_KEY, response, settings.CACHE_TTL)
-    return response
+    #cache.set(CACHE_KEY, response, settings.CACHE_TTL)
+    #return response
