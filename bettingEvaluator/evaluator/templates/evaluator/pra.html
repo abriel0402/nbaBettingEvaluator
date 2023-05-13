@@ -6,25 +6,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
     <title>Document</title>
-</head>
-<body>
+    <style>
+        body {
+            background-color: #F2F2F2;
+            color: #333;
+            font-weight: bold;
+        }
 
-    <div>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white row">
-        <a href="{% url 'points' %}"class="navbar-brand text-black col-sm text-center">Points</a>    
-        <a href="{% url 'assists' %}"class="navbar-brand text-black col-sm text-center">Assists</a>  
-        <a href="{% url 'rebounds' %}"class="navbar-brand text-black col-sm text-center">Rebounds</a>  
-        <a href="{% url 'pa' %}"class="navbar-brand text-black col-sm text-center">Points+Assists</a>  
-        <a href="{% url 'pr' %}"class="navbar-brand text-black col-sm text-center">Points+Rebounds</a>  
-        <a href="{% url 'ra' %}"class="navbar-brand text-black col-sm text-center">Rebounds+Assists</a>  
-        <a href="{% url 'pra' %}" class="navbar-brand text-black col-sm text-center">Points+Rebounds+Assists</a>  
-        <a class="navbar-brand text-black col-sm text-center">Steals</a>  
-        <a class="navbar-brand text-black col-sm text-center">Blocks</a>  
-        <a class="navbar-brand text-black col-sm text-center">Steals+Blocks</a>  
-        <a class="navbar-brand text-black col-sm text-center">Turnovers</a>
-        
-    </nav>
-</div>
+        .navbar-brand {
+            color: #333;
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding: 0.5rem 1.5rem;
+            margin: 0;
+            border-radius: 5px;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        .navbar-brand:hover {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .navbar {
+            justify-content: center;
+            border-bottom: 2px solid #333;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            background-color: #fff;
+        }
+
+        .navbar a:not(:last-child) {
+            margin-right: 1rem;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        p {
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: #333;
+            border-color: #333;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            background-color: #555;
+            border-color: #555;
+        }
+
+        .navbar-brand:hover,
+        .navbar-brand:focus {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .navbar-brand:focus,
+        .navbar-brand.focus {
+            background-color: #333;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        .navbar-nav .active > .nav-link,
+        .navbar-nav .active > .nav-link:hover,
+        .navbar-nav .active > .nav-link:focus {
+            color: #fff;
+            background-color: #333;
+        }
+
+        .list-group-item {
+            color: #333;
+            font-weight: bold;
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            border: 1px solid rgba(0,0,0,0.125);
+            border-radius: 0.25rem;
+        }
+
+        .list-group-item a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        .list-group-item a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    
+    <body>
+        <div>
+            <nav class="navbar navbar-expand-lg navbar-light row">
+                <a href="{% url 'points' %}" class="navbar-brand text-black col-sm">Points</a>
+                <a href="{% url 'assists'%}" class="navbar-brand text-black col-sm">Assists</a>
+                <a href="{% url 'rebounds' %}" class="navbar-brand text-black col-sm">Rebounds</a>
+                <a href="{% url 'pa' %}" class="navbar-brand text-black col-sm">Points+Assists</a>
+                <a href="{% url 'pr' %}" class="navbar-brand text-black col-sm">Points+Rebounds</a>
+                <a href="{% url 'ra' %}" class="navbar-brand text-black col-sm">Rebounds+Assists</a>
+                <a href="{% url 'pra' %}" class="navbar-brand text-black col-sm">Points+Rebounds+Assists</a>
+                <a href="#" class="navbar-brand text-black col-sm">Steals</a>
+                <a href="#" class="navbar-brand text-black col-sm">Blocks</a>
+            </nav>
+        </div>
     <h1 class="text-center p-1">Points + Rebounds + Assists</h1>
     <ul class="list-group text-center">
         {% for leg in legs %}

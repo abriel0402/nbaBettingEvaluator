@@ -15,8 +15,8 @@ if PLAYERS is None:
     PLAYERS = players.get_players()
     cache.set("PLAYERS", PLAYERS, timeout=60*60*24*7)
 
-OVER_DECISION = 66
-UNDER_DECISION = 32
+OVER_DECISION = 62
+UNDER_DECISION = 35
 
 
 
@@ -67,12 +67,33 @@ filteredLineTagsAssists = filterTags(lineTagsAssists)
 filteredLineTagsRebounds = filterTags(lineTagsRebounds)
 
 
+
+# Decides whether to go over, under, or pass
+def getDecision(last5, last10, last20):
+
+    hitRate5 = int(last5[0][:-1])
+    hitRate10 = int(last10[0][:-1])
+    hitRate20 = int(last20[0][:-1])
+    average = (hitRate5 + hitRate10 + hitRate20)/3
+    if average >= OVER_DECISION:
+        decision = "OVER"
+        color = "btn btn-success"
+    elif average <= UNDER_DECISION:
+        decision = "UNDER"
+        color = "btn btn-danger"
+    else:
+        decision = "PASS"
+        color = "btn btn-dark"
+    return [decision, color]
+
+
 class Leg:
-    def __init__(self, player, stat, line, playerID, last5=[], last10=[], last20=[], season=[], vsOpp=[]):
+    def __init__(self, player, stat, line, playerID, last5=[], last10=[], last20=[], season=[], decision=[]):
         self.player = player
         self.stat = stat
         self.line = line
         self.playerID = playerID
+        self.decision = decision
 
 #get legs
 def createLegs(playerTags, filteredLineTags, stat):
@@ -214,23 +235,6 @@ def getHitRates(leg, n, stat1="N/A", stat2="N/A", stat3="N/A"):
 
 
 
-# Decides whether to go over, under, or pass
-def getDecision(last5, last10, last20):
-
-    hitRate5 = int(last5[0][:-1])
-    hitRate10 = int(last10[0][:-1])
-    hitRate20 = int(last20[0][:-1])
-    average = (hitRate5 + hitRate10 + hitRate20)/3
-    if average >= OVER_DECISION:
-        decision = "OVER"
-        color = "btn btn-success"
-    elif average <= UNDER_DECISION:
-        decision = "UNDER"
-        color = "btn btn-danger"
-    else:
-        decision = "PASS"
-        color = "btn btn-dark"
-    return [decision, color]
 
 
 
