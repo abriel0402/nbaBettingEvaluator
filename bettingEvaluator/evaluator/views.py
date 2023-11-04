@@ -71,10 +71,27 @@ filteredLineTagsRebounds = filterTags(lineTagsRebounds)
 # Decides whether to go over, under, or pass
 def getDecision(last5, last10, last20):
 
-    hitRate5 = int(last5[0][:-1])
-    hitRate10 = int(last10[0][:-1])
-    hitRate20 = int(last20[0][:-1])
-    average = (hitRate5 + hitRate10 + hitRate20)/3
+    
+    average = 50
+    numOfRates = 0
+    if last5 != None:
+        hitRate5 = int(last5[0][:-1])
+        numOfRates += 1
+    else:
+        hitRate5 = 0
+    if last10 != None:
+        hitRate10 = int(last10[0][:-1])
+        numOfRates += 1
+    else:
+        hitRate10 = 0
+    if last20 != None:
+        hitRate20 = int(last20[0][:-1])
+        numOfRates += 1
+    else:
+        hitRate20 = 0
+    
+    if numOfRates > 0:
+        average = (hitRate5 + hitRate10 + hitRate20)/numOfRates
     if average >= OVER_DECISION:
         decision = "OVER"
         color = "btn btn-success"
@@ -172,67 +189,82 @@ if PRA_LEGS is None:
 def getHitRates(leg, n, stat1="N/A", stat2="N/A", stat3="N/A"):
     lastN = []
     if leg.stat in ["PTS", "AST", "REB"]:
-        x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
+        x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(n)
         print("api being called")
         lastN = x[leg.stat].tolist()
-        hitCount = 0
-        missingGames = n-len(lastN)
-        if missingGames != 0:
-            print("api being called")
-            x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
-            missingGamesList = x[leg.stat].tolist()
-            lastN = lastN + missingGamesList
-        for stat in lastN:
-            if float(stat) > float(leg.line):
-                hitCount = hitCount + 1
+        
+        if len(lastN) == n: # this line is for the case where a player has not played N games yet
+            hitCount = 0
+            missingGames = n-len(lastN)
+
+        # For playoffs 
+        #   if missingGames != 0:
+         #      print("api being called")
+          #     x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
+           #    missingGamesList = x[leg.stat].tolist()
+            #   lastN = lastN + missingGamesList
+
+            for stat in lastN:
+                if float(stat) > float(leg.line):
+                    hitCount = hitCount + 1
     
-        hitRateN = str(int((hitCount/n)*100))+"%"
-        return [hitRateN, lastN]
+            hitRateN = str(int((hitCount/n)*100))+"%"
+            return [hitRateN, lastN]
+        return None
     elif leg.stat in ["PA", "PR", "RA"]:
         print("api being called")
-        x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
+        x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(n)
         lastN1 = x[stat1].tolist()
         lastN2 = x[stat2].tolist()
-        hitCount = 0
-        missingGames = n-len(lastN1)
-        if missingGames != 0:
-            print("api being called")
-            x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
-            missingGamesList1 = x[stat1].tolist()
-            missingGamesList2 = x[stat2].tolist()
-            lastN1 = lastN1 + missingGamesList1
-            lastN2 = lastN2 + missingGamesList2
+        if len(lastN1) == n:
+            hitCount = 0
+            missingGames = n-len(lastN1)
         
-        for i in range(len(lastN1)):
-            lastN.append(lastN1[i]+lastN2[i])
-            if (float(lastN1[i])+float(lastN2[i])) > float(leg.line):
-                hitCount = hitCount + 1
-        hitRateN = str(int((hitCount/n)*100))+"%"
-        return [hitRateN, lastN]
+        # For playoffs
+        #   if missingGames != 0:
+          #     print("api being called")
+           #    x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
+            #   missingGamesList1 = x[stat1].tolist()
+         #      missingGamesList2 = x[stat2].tolist()
+          #     lastN1 = lastN1 + missingGamesList1
+           #    lastN2 = lastN2 + missingGamesList2
+        
+            for i in range(len(lastN1)):
+                lastN.append(lastN1[i]+lastN2[i])
+                if (float(lastN1[i])+float(lastN2[i])) > float(leg.line):
+                    hitCount = hitCount + 1
+            hitRateN = str(int((hitCount/n)*100))+"%"
+            return [hitRateN, lastN]
+        return None
     else:
         print("api call")
-        x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
+        x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(n)
+        # for playoffs: x = playergamelog.PlayerGameLog(leg.playerID, season_type_all_star="Playoffs").get_data_frames()[0].head(n)
         lastN1 = x[stat1].tolist()
         lastN2 = x[stat2].tolist()
         lastN3 = x[stat3].tolist()
-        hitCount = 0
-        missingGames = n-len(lastN1)
-        if missingGames != 0:
-            print("api being called")
-            x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
-            missingGamesList1 = x[stat1].tolist()
-            missingGamesList2 = x[stat2].tolist()
-            missingGamesList3 = x[stat3].tolist()
-            lastN1 = lastN1 + missingGamesList1
-            lastN2 = lastN2 + missingGamesList2
-            lastN3 = lastN3 + missingGamesList3
-        for i in range(len(lastN1)):
-            lastN.append(lastN1[i]+lastN2[i]+lastN3[i])
-            if (float(lastN1[i])+float(lastN2[i])+float(lastN3[i]) > float(leg.line)):
-                hitCount += 1
-        hitRateN = str(int((hitCount/n)*100))+"%"
-        return [hitRateN, lastN]
+        if len(lastN1) == n:
+            hitCount = 0
+            missingGames = n-len(lastN1)
 
+        # for playoffs
+
+        #   if missingGames != 0:
+         #       print("api being called")
+          #     x = playergamelog.PlayerGameLog(leg.playerID).get_data_frames()[0].head(missingGames)
+           #    missingGamesList1 = x[stat1].tolist()
+          #     missingGamesList2 = x[stat2].tolist()
+           #    missingGamesList3 = x[stat3].tolist()
+           #    lastN1 = lastN1 + missingGamesList1
+           #    lastN2 = lastN2 + missingGamesList2
+           #    lastN3 = lastN3 + missingGamesList3
+            for i in range(len(lastN1)):
+                lastN.append(lastN1[i]+lastN2[i]+lastN3[i])
+                if (float(lastN1[i])+float(lastN2[i])+float(lastN3[i]) > float(leg.line)):
+                    hitCount += 1
+            hitRateN = str(int((hitCount/n)*100))+"%"
+            return [hitRateN, lastN]
+        return None
 
 
 
@@ -333,21 +365,35 @@ def player(request, playerID, stat):
     #  Hit Rates
     if leg.stat in ["PA", "PR", "RA"]:
         hitRates = getHitRates(leg, 20, stat1, stat2)
-        leg.last20 = hitRates[1]
-        hitRate20 = hitRates[0]
+        if hitRates == None:
+            leg.last20 = None
+            hitRate20 = None
+        else:
+            leg.last20 = hitRates[1]
+            hitRate20 = hitRates[0]
     
 
         hitRates = getHitRates(leg, 10, stat1, stat2)
-        leg.last10 = hitRates[1]
-        hitRate10 = hitRates[0]
+        if hitRates == None:
+            leg.last10 = None
+            hitRate10 = None
+        else:
+            leg.last10 = hitRates[1]
+            hitRate10 = hitRates[0]
 
         hitRates = getHitRates(leg, 5, stat1, stat2)
-        leg.last5 = hitRates[1]
-        hitRate5 = hitRates[0]
+        if hitRates == None:
+            leg.last5 = None
+            hitRate5 = None
+        else:
+            leg.last5 = hitRates[1]
+            hitRate5 = hitRates[0]
 
         #Get Season Hit Rate
         hitCount = 0
         print("api being called")
+
+        # For this line below, make sure it is the correct season
         x = playergamelog.PlayerGameLog(leg.playerID, season="2022").get_data_frames()[0]
         list1 = x[stat1].tolist()
         list2 = x[stat2].tolist()
@@ -357,17 +403,29 @@ def player(request, playerID, stat):
         hitRateSzn = str(int((hitCount/len(list1))*100))+"%"
     elif leg.stat in ["PTS", "REB", "AST"]: 
         hitRates = getHitRates(leg, 20)
-        leg.last20 = hitRates[1]
-        hitRate20 = hitRates[0]
+        if hitRates == None:
+            leg.last20 = None
+            hitRate20 = None
+        else:
+            leg.last20 = hitRates[1]
+            hitRate20 = hitRates[0]
     
 
         hitRates = getHitRates(leg, 10)
-        leg.last10 = hitRates[1]
-        hitRate10 = hitRates[0]
+        if hitRates == None:
+            leg.last10 = None
+            hitRate10 = None
+        else:
+            leg.last10 = hitRates[1]
+            hitRate10 = hitRates[0]
 
         hitRates = getHitRates(leg, 5)
-        leg.last5 = hitRates[1]
-        hitRate5 = hitRates[0]
+        if hitRates == None:
+            leg.last5 = None
+            hitRate5 = None
+        else:
+            leg.last5 = hitRates[1]
+            hitRate5 = hitRates[0]
 
         #Get Season Hit Rate
         print("api being called")
@@ -380,17 +438,29 @@ def player(request, playerID, stat):
         hitRateSzn = str(int((hitCount/len(leg.season))*100))+"%"
     else:
         hitRates = getHitRates(leg, 20, stat1, stat2, stat3)
-        leg.last20 = hitRates[1]
-        hitRate20 = hitRates[0]
+        if hitRates == None:
+            leg.last20 = None
+            hitRate20 = None
+        else:
+            leg.last20 = hitRates[1]
+            hitRate20 = hitRates[0]
     
 
         hitRates = getHitRates(leg, 10, stat1, stat2, stat3)
-        leg.last10 = hitRates[1]
-        hitRate10 = hitRates[0]
+        if hitRates == None:
+            leg.last10 = None
+            hitRate10 = None
+        else:
+            leg.last10 = hitRates[1]
+            hitRate10 = hitRates[0]
 
         hitRates = getHitRates(leg, 5, stat1, stat2, stat3)
-        leg.last5 = hitRates[1]
-        hitRate5 = hitRates[0]
+        if hitRates == None:
+            leg.last5 = None
+            hitRate5 = None
+        else:
+            leg.last5 = hitRates[1]
+            hitRate5 = hitRates[0]
 
         #Get Season Hit Rate
         hitCount = 0
@@ -408,19 +478,25 @@ def player(request, playerID, stat):
     
         
     # Get Averages
+    average5 = None
+    average10 = None
+    average20 = None
     total = 0
-    for stat in leg.last5:
-        total = total + stat
-    average5 = round((total/5), 1)
-    total = 0
-    for stat in leg.last10:
-        total = total + stat
-    average10 = round((total/10), 1)
-    total = 0
-    for stat in leg.last20:
-        total = total + stat
-    average20 = round((total/20), 1)
-    total = 0
+    if leg.last5 != None:
+        for stat in leg.last5:
+            total = total + stat
+        average5 = round((total/5), 1)
+        total = 0
+    if leg.last10 != None:
+        for stat in leg.last10:
+            total = total + stat
+        average10 = round((total/10), 1)
+        total = 0
+    if leg.last20 != None:
+        for stat in leg.last20:
+            total = total + stat
+        average20 = round((total/20), 1)
+        total = 0
     if leg.stat in ["PTS", "AST", "REB"]:
         for stat in leg.season:
             total = total + stat
